@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>실사 모델 샘플 - 보드게임 카페</title>
+    <style>
+      html, body { margin: 0; height: 100%; overflow: hidden; background: #000; }
+      canvas { display: block; }
+      #start {
+        position: fixed; inset: 0; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 12px;
+        background: rgba(0, 0, 0, 0.55); color: #fff; cursor: pointer;
+        font-family: system-ui, sans-serif; user-select: none;
+      }
+      #start h1 { margin: 0; font-size: 32px; }
+      #start p { margin: 0; opacity: 0.85; }
+    </style>
+  </head>
+  <body>
+    <div id="start">
+      <h1>실사 모델 샘플: 보드게임 카페 구석</h1>
+      <p id="msg">모델 불러오는 중...</p>
+      <p>W A S D 이동 · 마우스 시점 · Esc 멈춤</p>
+    </div>
+    <script type="module" src="/src/sample/cafeSample.js"></script>
+  </body>
+</html>
