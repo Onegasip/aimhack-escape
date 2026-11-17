@@ -10,10 +10,10 @@ const right = new THREE.Vector3();
 const UP = new THREE.Vector3(0, 1, 0);
 
 export function updatePlayer(dt, camera, keys, colliders) {
-  // 카메라가 보는 방향에서 위아래 성분을 빼서 "바닥 기준 앞쪽"을 구한다
-  camera.getWorldDirection(forward);
-  forward.y = 0;
-  forward.normalize();
+  // 카메라의 좌우 회전(yaw)만으로 "바닥 기준 앞쪽"을 구한다.
+  // (위아래로 끝까지 고개를 들면 보는 방향의 수평 성분이 0이 되어 좌표가 망가지는 문제 방지)
+  const yaw = camera.rotation.y; // 카메라 회전 순서가 YXZ라 y가 곧 좌우 회전
+  forward.set(-Math.sin(yaw), 0, -Math.cos(yaw));
   right.crossVectors(forward, UP); // 앞쪽 × 위쪽 = 오른쪽
 
   const ahead = (keys.forward ? 1 : 0) - (keys.back ? 1 : 0);
@@ -32,7 +32,7 @@ export function updatePlayer(dt, camera, keys, colliders) {
   }
 
   camera.position.set(pos.x, PLAYER.eyeHeight, pos.z);
-  pos.yawDeg = THREE.MathUtils.radToDeg(Math.atan2(-forward.x, -forward.z));
+  pos.yawDeg = THREE.MathUtils.radToDeg(yaw);
   pos.roomId = findRoomAt(pos.x)?.id ?? null;
 }
 
