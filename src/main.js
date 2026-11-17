@@ -1,5 +1,12 @@
 // 게임 시작점: 씬(무대), 카메라(눈), 렌더러(그리는 도구)를 만들고 매 프레임 화면을 그린다.
 import * as THREE from 'three';
+import { PLAYER } from './data/rooms.js';
+import { state } from './systems/state.js';
+import { buildRooms } from './world/roomBuilder.js';
+import { buildFurniture } from './world/furniture.js';
+import { createControls } from './player/controls.js';
+import { updatePlayer } from './player/player.js';
+import { createHud } from './ui/hud.js';
 
 // 1) 렌더러: 3D 장면을 화면(canvas)에 그려 준다.
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -9,27 +16,25 @@ document.body.appendChild(renderer.domElement);
 
 // 2) 씬: 물건, 조명을 올려 두는 무대
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x202028);
+scene.background = new THREE.Color(0x101014);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x555555, 1.4)); // 전체를 은은하게 밝히는 빛
 
-// 3) 카메라: 플레이어의 눈. 시야각 75도, 눈높이 1.6m (CLAUDE.md 3장)
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
-camera.position.set(0, 1.6, 5);
-camera.lookAt(0, 0, 0);
+// 3) 카메라: 플레이어의 눈 (눈높이 1.6m)
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.05, 200);
+camera.rotation.order = 'YXZ'; // 좌우 회전 먼저, 그다음 위아래 (1인칭 시점 표준)
+camera.rotation.y = THREE.MathUtils.degToRad(state.player.yawDeg);
+camera.position.set(state.player.x, PLAYER.eyeHeight, state.player.z);
 
-// 4) 확인용 바닥과 조명 (②단계에서 진짜 방으로 바뀐다)
-const floor = new THREE.Mesh(
-  new THREE.PlaneGeometry(10, 10),
-  new THREE.MeshStandardMaterial({ color: 0x888888 }),
-);
-floor.rotation.x = -Math.PI / 2; // 평면을 눕혀서 바닥으로
-scene.add(floor);
+// 4) 방과 가구 만들기. colliders = 플레이어를 막는 사각형 목록
+const colliders = [];
+buildRooms(scene, colliders);
+buildFurniture(scene, colliders);
 
-scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1.5)); // 하늘/땅 은은한 빛
-const sun = new THREE.DirectionalLight(0xffffff, 1.5); // 한 방향에서 오는 빛
-sun.position.set(3, 5, 2);
-scene.add(sun);
+// 5) 조작과 화면 글자
+const { controls, keys } = createControls(camera, renderer.domElement);
+const hud = createHud(controls);
 
-// 5) 창 크기가 바뀌면 카메라 비율과 화면 크기를 다시 맞춘다.
+// 6) 창 크기가 바뀌면 카메라 비율과 화면 크기를 다시 맞춘다.
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
@@ -37,7 +42,12 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// 6) 렌더 루프: 매 프레임(약 1/60초마다) 화면을 다시 그린다.
+// 7) 렌더 루프: 매 프레임 이동 → 화면 그리기
+const clock = new THREE.Clock();
 renderer.setAnimationLoop(() => {
+  // 프레임 사이 시간(초). 탭을 오래 비웠다 돌아와도 벽을 뚫지 않게 최대 0.05초로 자른다.
+  const dt = Math.min(clock.getDelta(), 0.05);
+  if (controls.isLocked) updatePlayer(dt, camera, keys, colliders);
+  hud.update(state.player);
   renderer.render(scene, camera);
 });
