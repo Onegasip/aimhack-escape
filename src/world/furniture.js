@@ -3,6 +3,7 @@
 // → 모델을 바꿀 때 이 파일만 고치면 되고, id와 위치는 그대로 유지된다.
 import * as THREE from 'three';
 import { rooms } from '../data/rooms.js';
+import { state } from '../systems/state.js';
 import { addBox, BLOCK_BELOW } from './blocks.js';
 
 // 종류별 기본 색 (임시 블록용). 목록에 없는 종류는 회색
@@ -56,6 +57,19 @@ export function getFurniture(id) {
   return registry.get(id);
 }
 
+// 그 방에 있는 가구 Group 목록 (조준 계산을 가까운 방만 하려고)
+export function furnitureInRoom(roomId) {
+  const list = [];
+  for (const entry of registry.values()) if (entry.roomId === roomId) list.push(entry.object);
+  return list;
+}
+
+// 물건 보이기/숨기기 (상자에서 열쇠가 나타나거나, 주워서 사라질 때)
+export function setFurnitureVisible(id, visible) {
+  const entry = registry.get(id);
+  if (entry) entry.object.visible = visible;
+}
+
 export function buildFurniture(scene, colliders) {
   for (const room of rooms) {
     for (const item of room.furniture ?? []) {
@@ -70,6 +84,8 @@ export function buildFurniture(scene, colliders) {
       // 가구 하나 = Group 하나. 나중에 블록 대신 .glb 모델을 이 Group 안에 넣으면 된다.
       const group = new THREE.Group();
       group.name = item.id;
+      group.userData.furnitureId = item.id; // 조준했을 때 어느 물건인지 알 수 있게
+      group.visible = !state.props[item.id]?.hidden;
       group.position.set(x, y, z);
       group.rotation.y = THREE.MathUtils.degToRad(rotY);
       buildBlock(group, item, w, h, d);

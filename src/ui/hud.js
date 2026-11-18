@@ -1,5 +1,6 @@
 // 화면 위에 겹치는 글자들: 시작 안내판, 개발용 좌표 표시
 import { findRoomAt } from '../data/rooms.js';
+import { isPanelOpen } from './panels.js';
 
 const SHOW_DEBUG = true; // 개발용 좌표 표시. 끄려면 false
 
@@ -28,12 +29,16 @@ export function createHud(controls) {
   start.innerHTML = `
     <h1>에임핵 방탈출</h1>
     <p>화면을 클릭하면 시작</p>
-    <p>W A S D 이동 · 마우스 시점 · Esc 멈춤</p>`;
+    <p>W A S D 이동 · 마우스 시점 · Esc 멈춤</p>
+    <p>E 길게: 조사·줍기·사용 · I: 인벤토리</p>`;
   document.body.appendChild(start);
 
   start.addEventListener('click', () => controls.lock());
   controls.addEventListener('lock', () => (start.style.display = 'none'));
-  controls.addEventListener('unlock', () => (start.style.display = 'flex'));
+  // 창(자물쇠·인벤토리)을 여느라 잠금이 풀린 거면 시작 안내판을 띄우지 않는다
+  controls.addEventListener('unlock', () => {
+    if (!isPanelOpen()) start.style.display = 'flex';
+  });
 
   let debug = null;
   if (SHOW_DEBUG) {

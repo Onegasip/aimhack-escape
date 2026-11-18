@@ -14,7 +14,8 @@ export function createControls(camera, domElement) {
   };
 
   window.addEventListener('keydown', (e) => {
-    if (KEY_MAP[e.code]) keys[KEY_MAP[e.code]] = true;
+    // 게임 중(마우스 잠금 상태)일 때만 이동 키를 받는다 → 창에서 누른 키가 게임으로 새지 않음
+    if (KEY_MAP[e.code] && controls.isLocked) keys[KEY_MAP[e.code]] = true;
   });
   window.addEventListener('keyup', (e) => {
     if (KEY_MAP[e.code]) keys[KEY_MAP[e.code]] = false;

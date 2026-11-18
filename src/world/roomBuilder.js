@@ -7,10 +7,10 @@ import { addBox } from './blocks.js';
 const FRAME_COLOR = 0x5a3e2b;
 const DOOR_COLOR = 0x7a5232;
 
-// 문 id → 닫힌 문짝 mesh (③단계에서 문 열기에 쓴다)
+// 문 id → { panel: 문짝 mesh, pivot: 경첩, axis, angle }
 const doorPanels = new Map();
 export function getDoorPanel(id) {
-  return doorPanels.get(id);
+  return doorPanels.get(id)?.panel;
 }
 
 export function buildRooms(scene, colliders) {
@@ -173,7 +173,57 @@ function buildDoor(scene, colliders, door) {
   addBox(group, { ...place(0, h + post / 2, w + post * 2, post, depth), color: FRAME_COLOR });
 
   if (!state.doors[door.id]?.open) {
-    const panel = addBox(group, { ...place(0, h / 2, w, h, 0.06), color: DOOR_COLOR, colliders, id: door.id });
-    doorPanels.set(door.id, panel);
+    // 문짝은 경첩(문 한쪽 끝)을 축으로 도는 pivot 안에 넣는다
+    const pivot = new THREE.Group();
+    const hinge = place(-w / 2, 0, 0, 0, 0).center;
+    pivot.position.set(hinge[0], 0, hinge[2]);
+    group.add(pivot);
+    const local = door.axis === 'z'
+      ? { center: [0, h / 2, w / 2], size: [0.06, h, w] }
+      : { center: [w / 2, h / 2, 0], size: [w, h, 0.06] };
+    const panel = addBox(pivot, { ...local, color: DOOR_COLOR });
+    panel.userData.doorId = door.id; // 조준했을 때 어느 문인지 알 수 있게
+    // 충돌 상자는 월드 좌표로 따로 등록
+    const world = place(0, h / 2, w, h, 0.06);
+    colliders.push({
+      id: door.id,
+      minX: world.center[0] - world.size[0] / 2, maxX: world.center[0] + world.size[0] / 2,
+      minZ: world.center[2] - world.size[2] / 2, maxZ: world.center[2] + world.size[2] / 2,
+    });
+    doorPanels.set(door.id, { id: door.id, panel, pivot, axis: door.axis, angle: 0, hinge, w });
+  }
+  builtColliders = colliders;
+}
+
+let builtColliders = null;
+const swinging = []; // 지금 열리는 중인 문
+
+// 문 열기: 충돌 상자를 없애고 문짝을 90도 돌린다 (애니메이션은 updateDoors에서)
+export function openDoorMesh(id) {
+  const door = doorPanels.get(id);
+  if (!door) return;
+  const i = builtColliders.findIndex((c) => c.id === id);
+  if (i >= 0) builtColliders.splice(i, 1);
+  // 남북 벽의 문은 동쪽(+90도)으로, 동서 벽의 문은 남쪽(-90도)으로 열린다
+  door.target = door.axis === 'z' ? Math.PI / 2 : -Math.PI / 2;
+  swinging.push(door);
+}
+
+// 매 프레임: 열리는 중인 문을 조금씩 돌린다 (0.6초에 다 열림)
+export function updateDoors(dt) {
+  for (let i = swinging.length - 1; i >= 0; i--) {
+    const d = swinging[i];
+    const step = (Math.PI / 2) * (dt / 0.6);
+    d.angle = Math.min(Math.abs(d.target), d.angle + step);
+    d.pivot.rotation.y = Math.sign(d.target) * d.angle;
+    if (d.angle >= Math.abs(d.target)) {
+      swinging.splice(i, 1);
+      // 다 열린 문짝도 통과 못 하게 충돌 상자를 붙인다 (벽에 붙어 선 얇은 판)
+      const [hx, , hz] = d.hinge;
+      const t = 0.03;
+      builtColliders.push(d.axis === 'z'
+        ? { id: `${d.id}_leaf`, minX: hx, maxX: hx + d.w, minZ: hz - t, maxZ: hz + t }
+        : { id: `${d.id}_leaf`, minX: hx - t, maxX: hx + t, minZ: hz, maxZ: hz + d.w });
+    }
   }
 }

@@ -24,7 +24,7 @@ export default {
   name: '1. 보드게임 카페',
   width: 15, depth: 15, height: 3,
   floorColor: 0x9c6b43, wallColor: 0xe6d3b3,
-  westDoor: { id: 'door_lobby_cafe', open: true },
+  westDoor: { id: 'door_lobby_cafe', open: false }, // ③단계 테스트: 열쇠로 열기
   furniture: [
     // A 카운터
     { id: 'cafe_counter', type: 'counter', pos: [-5, -3.5], size: [2.0, 1.05, 0.7] },

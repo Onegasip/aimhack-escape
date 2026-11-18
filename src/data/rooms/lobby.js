@@ -11,12 +11,15 @@ export default {
     { id: 'lobby_counter', type: 'counter', pos: [-4.5, -3.35], size: [3.0, 1.1, 0.7] },
     { id: 'lobby_counter_l', type: 'counter', pos: [-5.65, -2.4], size: [0.7, 1.1, 1.2] },
     { id: 'lobby_pos', type: 'monitor', pos: [-4.0, -3.35], y: 1.1, size: [0.4, 0.4, 0.3] },
-    { id: 'lobby_cctv_1', type: 'monitor', pos: [-5.0, -3.45], y: 1.1, size: [0.5, 0.35, 0.15] },
+    { id: 'lobby_cctv_1', type: 'monitor', pos: [-5.6, -3.45], y: 1.1, size: [0.5, 0.35, 0.15] },
     { id: 'lobby_cctv_2', type: 'monitor', pos: [-3.3, -3.45], y: 1.1, size: [0.5, 0.35, 0.15] },
     { id: 'lobby_staff_chair', type: 'chair', pos: [-3.5, -4.8], size: [0.5, 0.9, 0.5] },
     { id: 'lobby_back_shelf', type: 'shelf', pos: [-5, -5.7], size: [2.0, 1.8, 0.4] },
     { id: 'lobby_bracelet_tray', type: 'prop', pos: [-5.65, -2.6], y: 1.1, size: [0.3, 0.1, 0.2] },
     { id: 'lobby_brochure', type: 'prop', pos: [-5.65, -2.0], y: 1.1, size: [0.3, 0.4, 0.15] },
+    // ③단계 테스트 퍼즐: 자물쇠 상자 + 안에 든 열쇠 (data/puzzles.js 참고)
+    { id: 'lobby_test_box', type: 'box', color: 0x8d6e63, pos: [-5.0, -3.35], y: 1.1, size: [0.35, 0.22, 0.28], collide: false },
+    { id: 'lobby_test_key', type: 'prop', color: 0xd4af37, pos: [-5.0, -3.35], y: 1.32, size: [0.16, 0.04, 0.08], collide: false },
     { id: 'lobby_extinguisher', type: 'extinguisher', pos: [-2.7, -4.6], size: [0.15, 0.5, 0.15] },
     { id: 'lobby_briefing_mark', type: 'mark', pos: [-1.5, -3], size: [1.5, 0.01, 1.5], collide: false },
 

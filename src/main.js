@@ -2,11 +2,15 @@
 import * as THREE from 'three';
 import { PLAYER, rooms, findRoomAt } from './data/rooms.js';
 import { state } from './systems/state.js';
-import { buildRooms, updateRoomLights } from './world/roomBuilder.js';
+import { buildRooms, updateRoomLights, updateDoors } from './world/roomBuilder.js';
 import { buildFurniture } from './world/furniture.js';
 import { createControls } from './player/controls.js';
 import { updatePlayer } from './player/player.js';
+import { updateInteraction } from './systems/interaction.js';
 import { createHud } from './ui/hud.js';
+import { initPanels, isPanelOpen } from './ui/panels.js';
+import { initInventoryPanel } from './ui/inventoryPanel.js';
+import { setCrosshairVisible } from './ui/crosshair.js';
 
 // 1) 렌더러: 3D 장면을 화면(canvas)에 그려 준다.
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -49,6 +53,8 @@ buildFurniture(scene, colliders);
 // 5) 조작과 화면 글자
 const { controls, keys } = createControls(camera, renderer.domElement);
 const hud = createHud(controls);
+initPanels(controls);
+initInventoryPanel(controls);
 if (dev?.get('shot') === '1') document.getElementById('start').style.display = 'none';
 
 // 6) 창 크기가 바뀌면 카메라 비율과 화면 크기를 다시 맞춘다.
@@ -64,7 +70,12 @@ const clock = new THREE.Clock();
 renderer.setAnimationLoop(() => {
   // 프레임 사이 시간(초). 탭을 오래 비웠다 돌아와도 벽을 뚫지 않게 최대 0.05초로 자른다.
   const dt = Math.min(clock.getDelta(), 0.05);
-  if (controls.isLocked) updatePlayer(dt, camera, keys, colliders);
+  const playing = controls.isLocked && !isPanelOpen();
+  if (playing) updatePlayer(dt, camera, keys, colliders);
+  camera.updateMatrixWorld(); // 방금 움직인 위치·방향으로 조준 계산
+  updateInteraction(dt, camera, scene, keys, playing);
+  setCrosshairVisible(playing);
+  updateDoors(dt);
   updateRoomLights(findRoomAt(state.player.x));
   hud.update(state.player);
   renderer.render(scene, camera);
