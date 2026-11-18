@@ -1,5 +1,5 @@
 // 화면 위에 겹치는 글자들: 시작 안내판, 개발용 좌표 표시
-import { rooms } from '../data/rooms.js';
+import { findRoomAt } from '../data/rooms.js';
 
 const SHOW_DEBUG = true; // 개발용 좌표 표시. 끄려면 false
 
@@ -45,7 +45,7 @@ export function createHud(controls) {
   return {
     update(player) {
       if (!debug) return;
-      const room = rooms.find((r) => r.id === player.roomId);
+      const room = findRoomAt(player.x); // 걷기 전(시작 화면)에도 맞는 방 이름이 나오게 x로 직접 찾는다
       const localX = room ? player.x - room.cx : 0;
       debug.textContent =
         `${room ? room.name : '(방 밖)'}\n` +

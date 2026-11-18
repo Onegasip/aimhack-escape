@@ -1,6 +1,6 @@
-// 방 껍데기(바닥, 천장, 벽, 문틀, 닫힌 문, 조명)를 rooms.js 데이터대로 만든다.
+// 방 껍데기(바닥, 천장, 벽, 문틀, 닫힌 문, 조명)를 방 데이터대로 만든다.
 import * as THREE from 'three';
-import { rooms, WALL_T, listDoors } from '../data/rooms.js';
+import { rooms, WALL_T, DOOR, listDoors } from '../data/rooms.js';
 import { state } from '../systems/state.js';
 import { addBox } from './blocks.js';
 
@@ -15,6 +15,9 @@ export function getDoorPanel(id) {
 
 export function buildRooms(scene, colliders) {
   const doors = listDoors();
+  const doorById = new Map(doors.map((d) => [d.id, d]));
+  // 바깥 벽의 문 구멍: 남북으로 뻗은 벽이라 구멍 위치는 z
+  const perimeterHole = (door) => door && [{ center: doorById.get(door.id).z, ...pick(doorById.get(door.id)) }];
 
   rooms.forEach((room, i) => {
     const group = new THREE.Group();
@@ -33,40 +36,69 @@ export function buildRooms(scene, colliders) {
     // 서쪽·동쪽 벽 (남북으로 뻗음). 문이 있으면 구멍을 낸다.
     addWall(group, colliders, {
       ...wall, axis: 'z', fixed: room.x0 + WALL_T / 2, from: -halfD, to: halfD,
-      door: room.westDoor && doorInfo(doors, room.westDoor.id),
+      openings: perimeterHole(room.westDoor),
     });
-    const eastDoor = next?.westDoor ?? room.eastDoor;
     addWall(group, colliders, {
       ...wall, axis: 'z', fixed: room.x1 - WALL_T / 2, from: -halfD, to: halfD,
-      door: eastDoor && doorInfo(doors, eastDoor.id),
+      openings: perimeterHole(next?.westDoor ?? room.eastDoor),
     });
 
-    // 방 안쪽 벽 (MT 숙소 화장실 등). 좌표는 방 가운데 기준
+    // 방 안쪽 벽 (부스 칸막이, 화장실, 유리벽 등). 좌표는 방 가운데 기준
     for (const w of room.walls ?? []) {
       const axis = w.from[0] === w.to[0] ? 'z' : 'x';
       const fixed = axis === 'z' ? room.cx + w.from[0] : w.from[1];
       const a = axis === 'z' ? w.from[1] : room.cx + w.from[0];
       const b = axis === 'z' ? w.to[1] : room.cx + w.to[0];
+      const openings = (w.openings ?? []).map((op) => ({
+        center: axis === 'z' ? op.at : room.cx + op.at,
+        width: op.width,
+        height: op.height ?? DOOR.height,
+      }));
       addWall(group, colliders, {
-        ...wall, axis, fixed, from: Math.min(a, b), to: Math.max(a, b),
-        door: w.door && doorInfo(doors, w.door.id),
+        axis, fixed, from: Math.min(a, b), to: Math.max(a, b),
+        height: w.height ?? room.height,
+        thickness: w.thickness ?? WALL_T,
+        color: w.color ?? room.wallColor,
+        glass: w.glass ?? false,
+        glassTop: w.glassTop ?? 0,
+        base: w.y0 ?? 0,
+        openings,
       });
     }
 
-    // 조명: 방 가운데 천장 근처에 하나
-    const light = new THREE.PointLight(0xfff1dd, 6, Math.max(room.width, room.depth) * 1.1, 1);
-    light.position.set(room.cx, room.height - 0.8, 0); // 천장에 너무 붙이면 천장에 밝은 얼룩이 생긴다
-    group.add(light);
   });
 
   for (const door of doors) buildDoor(scene, colliders, door);
+
+  // 조명 풀: 전구 몇 개만 만들어 두고, 플레이어가 있는 방으로 옮겨 쓴다.
+  // (방마다 전구를 다 켜 두면 화면의 모든 점이 모든 전구를 계산해서 느려진다)
+  for (let i = 0; i < LIGHT_POOL; i++) {
+    const light = new THREE.PointLight(0xfff1dd, 0, 1, 1);
+    scene.add(light);
+    lightPool.push(light);
+  }
 }
 
-function doorInfo(doors, id) {
-  const d = doors.find((x) => x.id === id);
-  // 벽 구멍 위치: 남북 벽이면 z, 동서 벽이면 x
-  return { center: d.axis === 'z' ? d.z : d.x, width: d.width, height: d.height };
+const LIGHT_POOL = 4; // 한 방에 쓰는 조명 최대 개수 (볼링장 4개)
+const lightPool = [];
+let litRoomId = null;
+
+// 매 프레임 호출: 플레이어가 다른 방에 들어가면 조명을 그 방 위치로 옮긴다.
+// 전구 개수는 그대로 두고 밝기만 0으로 끄기 때문에 화면이 다시 준비(셰이더 재컴파일)되지 않는다.
+export function updateRoomLights(room) {
+  if (!room || room.id === litRoomId) return;
+  litRoomId = room.id;
+  const spots = room.lights ?? [[0, 0]]; // 기본은 방 가운데 하나
+  const reach = Math.max(room.width, room.depth) * (spots.length > 1 ? 0.6 : 1.1);
+  lightPool.forEach((light, i) => {
+    const spot = spots[i];
+    light.intensity = spot ? 6 : 0;
+    light.distance = reach;
+    if (spot) light.position.set(room.cx + spot[0], room.height - 0.8, spot[1]); // 천장에 너무 붙이면 밝은 얼룩
+  });
 }
+
+const pick = (d) => ({ width: d.width, height: d.height });
 
 function buildFloorAndCeiling(group, room) {
   const floor = new THREE.Mesh(
@@ -87,24 +119,37 @@ function buildFloorAndCeiling(group, room) {
 }
 
 // 벽 하나 만들기. axis 방향으로 from~to만큼 뻗고, 다른 축 좌표는 fixed.
-// door가 있으면 [벽 | 구멍 | 벽] + 구멍 위 상인방으로 나눈다.
-function addWall(group, colliders, { axis, fixed, from, to, height, color, door }) {
+// openings(구멍)가 있으면 [벽 | 구멍 | 벽 ...]으로 나누고 구멍 위는 상인방으로 막는다.
+// glass: 벽 전체가 유리. glassTop: 벽 윗부분 이만큼(m)만 유리 (부스 칸막이)
+// base: 벽이 시작하는 높이 (통유리 위 벽처럼 공중에 뜬 벽)
+function addWall(group, colliders, { axis, fixed, from, to, height, color, thickness = WALL_T, glass = false, glassTop = 0, base = 0, openings = [] }) {
+  const top = base + height;
   const pieces = []; // [시작, 끝, 아래 y, 위 y]
-  if (door) {
-    const left = door.center - door.width / 2;
-    const right = door.center + door.width / 2;
-    pieces.push([from, left, 0, height], [right, to, 0, height], [left, right, door.height, height]);
-  } else {
-    pieces.push([from, to, 0, height]);
+  let cursor = from;
+  for (const op of [...openings].sort((p, q) => p.center - q.center)) {
+    const left = op.center - op.width / 2;
+    const right = op.center + op.width / 2;
+    pieces.push([cursor, left, base, top], [left, right, base + op.height, top]);
+    cursor = right;
   }
+  pieces.push([cursor, to, base, top]);
 
+  const solidTop = glass ? base : top - glassTop; // 이 높이 위는 유리
   for (const [a, b, y0, y1] of pieces) {
     if (b - a <= 0.001 || y1 - y0 <= 0.001) continue;
-    const mid = (a + b) / 2;
-    const len = b - a;
-    const center = axis === 'x' ? [mid, (y0 + y1) / 2, fixed] : [fixed, (y0 + y1) / 2, mid];
-    const size = axis === 'x' ? [len, y1 - y0, WALL_T] : [WALL_T, y1 - y0, len];
-    addBox(group, { center, size, color, colliders });
+    // 한 조각을 [불투명 부분, 유리 부분]으로 나눈다
+    const parts = [
+      [y0, Math.min(y1, solidTop), false],
+      [Math.max(y0, solidTop), y1, true],
+    ];
+    for (const [p0, p1, isGlass] of parts) {
+      if (p1 - p0 <= 0.001) continue;
+      const mid = (a + b) / 2;
+      const len = b - a;
+      const center = axis === 'x' ? [mid, (p0 + p1) / 2, fixed] : [fixed, (p0 + p1) / 2, mid];
+      const size = axis === 'x' ? [len, p1 - p0, thickness] : [thickness, p1 - p0, len];
+      addBox(group, { center, size, color, colliders, glass: isGlass });
+    }
   }
 }
 

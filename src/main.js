@@ -1,8 +1,8 @@
 // 게임 시작점: 씬(무대), 카메라(눈), 렌더러(그리는 도구)를 만들고 매 프레임 화면을 그린다.
 import * as THREE from 'three';
-import { PLAYER } from './data/rooms.js';
+import { PLAYER, rooms, findRoomAt } from './data/rooms.js';
 import { state } from './systems/state.js';
-import { buildRooms } from './world/roomBuilder.js';
+import { buildRooms, updateRoomLights } from './world/roomBuilder.js';
 import { buildFurniture } from './world/furniture.js';
 import { createControls } from './player/controls.js';
 import { updatePlayer } from './player/player.js';
@@ -18,6 +18,15 @@ document.body.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x101014);
 scene.add(new THREE.HemisphereLight(0xffffff, 0x555555, 1.4)); // 전체를 은은하게 밝히는 빛
+
+// 개발용: 주소 뒤에 ?room=bowl 처럼 붙이면 그 방 서쪽 문 앞에서 시작 (배포본에서는 꺼짐)
+if (import.meta.env.DEV) {
+  const target = rooms.find((r) => r.id === new URLSearchParams(location.search).get('room'));
+  if (target) {
+    state.player.x = target.x0 + 1.0;
+    state.player.z = 0;
+  }
+}
 
 // 3) 카메라: 플레이어의 눈 (눈높이 1.6m)
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.05, 200);
@@ -48,6 +57,7 @@ renderer.setAnimationLoop(() => {
   // 프레임 사이 시간(초). 탭을 오래 비웠다 돌아와도 벽을 뚫지 않게 최대 0.05초로 자른다.
   const dt = Math.min(clock.getDelta(), 0.05);
   if (controls.isLocked) updatePlayer(dt, camera, keys, colliders);
+  updateRoomLights(findRoomAt(state.player.x));
   hud.update(state.player);
   renderer.render(scene, camera);
 });

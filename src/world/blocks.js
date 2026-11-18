@@ -11,14 +11,23 @@ export function material(color) {
   return materials.get(color);
 }
 
+// 유리: 반투명 하늘색. depthWrite를 끄면 뒤에 있는 물건이 비쳐 보인다.
+const glassMaterial = new THREE.MeshStandardMaterial({
+  color: 0xbfe3f0,
+  roughness: 0.1,
+  transparent: true,
+  opacity: 0.25,
+  depthWrite: false,
+});
+
 // 이 높이보다 아래에서 시작하는 물건만 플레이어를 막는다 (문 위 상인방 등은 안 막음)
 export const BLOCK_BELOW = 1.8;
 
 // 상자 하나를 만들어 parent에 붙인다.
 // center: 월드 좌표 [x, y, z] (상자 한가운데), size: [x, y, z] 크기
-// colliders 배열을 주면 충돌 상자(바닥에서 본 사각형)도 등록한다.
-export function addBox(parent, { center, size, color, colliders = null, id = null }) {
-  const mesh = new THREE.Mesh(unitBox, material(color));
+// colliders 배열을 주면 충돌 상자(바닥에서 본 사각형)도 등록한다. glass: true면 유리 재질
+export function addBox(parent, { center, size, color, colliders = null, id = null, glass = false }) {
+  const mesh = new THREE.Mesh(unitBox, glass ? glassMaterial : material(color));
   mesh.position.set(center[0], center[1], center[2]);
   mesh.scale.set(size[0], size[1], size[2]);
   parent.add(mesh);

@@ -1,31 +1,33 @@
-// 가구를 rooms.js 데이터대로 만든다. 지금은 블록, 나중에 .glb 모델로 바꾼다.
-// 다른 코드는 getFurniture('cafe_table_1')처럼 id로만 가구를 찾는다.
+// 가구를 방 데이터대로 만든다. 지금은 블록, 나중에 .glb 모델로 바꾼다.
+// 다른 코드는 getFurniture('cafe_table4_1')처럼 id로만 가구를 찾는다.
 // → 모델을 바꿀 때 이 파일만 고치면 되고, id와 위치는 그대로 유지된다.
 import * as THREE from 'three';
 import { rooms } from '../data/rooms.js';
 import { addBox, BLOCK_BELOW } from './blocks.js';
 
-// 종류별 기본 색 (임시 블록용)
+// 종류별 기본 색 (임시 블록용). 목록에 없는 종류는 회색
 const TYPE_COLORS = {
-  table: 0x8b5a2b,
-  chair: 0x5c3b1e,
-  shelf: 0x6b4a2f,
-  counter: 0x7a7a85,
-  terminal: 0x2d6cdf,
-  tvstand: 0x333333,
-  tv: 0x111111,
-  sofa: 0x3b4a8a,
-  fridge: 0xe8e8e8,
-  futon: 0xd9c7a7,
-  toilet: 0xf7f7f7,
-  sink: 0xdfe6ea,
-  lane: 0xd8b47a,
-  pindeck: 0xeeeeee,
-  pedestal: 0x9a8f7a,
-  sign: 0x22aa44,
+  // 나무 가구
+  table: 0x8b5a2b, low_table: 0x9a6b3c, chair: 0x5c3b1e, stool: 0x4a4a4a, shelf: 0x6b4a2f,
+  counter: 0x7a7a85, cabinet: 0xc9b89a, bench: 0x6e5038, closet: 0xb59870,
+  // 소파·천
+  sofa: 0x3b4a8a, cushion: 0xc0504d, futon: 0xd9c7a7, pillow: 0xf2efe6, beanbag: 0xe07b39,
+  // 가전·화면
+  tv: 0x111111, monitor: 0x1a1a1a, tvstand: 0x333333, console: 0x222222, pad: 0x2b2b2b,
+  fridge: 0xe8e8e8, appliance: 0xd5d5d5, machine: 0x5b6470, terminal: 0x2d6cdf, speaker: 0x262626,
+  // 벽·안내물
+  poster: 0xb23a48, board: 0x2f4f4f, sign: 0x22aa44, panel: 0x34495e, door: 0x7a5232, mark: 0xf2c94c,
+  // 위생·주방
+  toilet: 0xf7f7f7, sink: 0xdfe6ea, stove: 0x333333,
+  // 볼링
+  lane: 0xd8b47a, approach: 0xe3c693, pins: 0xeeeeee, pinsetter: 0x2c2c34, capping: 0x3a3a3a,
+  ball_rack: 0x8e44ad, ball_return: 0x34495e, settee: 0xc0392b,
+  // 기타
+  plant: 0x2e7d32, prop: 0x9e9e9e, box: 0xa1887f, bag: 0x455a64, game: 0x7e57c2,
+  pedestal: 0x9a8f7a, light: 0xfff3c4, extinguisher: 0xd32f2f,
 };
 
-// id → { def: rooms.js 데이터, roomId, object: THREE.Group }
+// id → { def: 방 데이터, roomId, object: THREE.Group }
 const registry = new Map();
 
 export function getFurniture(id) {
@@ -52,6 +54,7 @@ export function buildFurniture(scene, colliders) {
         center: [0, h / 2, 0],
         size: [w, h, d],
         color: item.color ?? TYPE_COLORS[item.type] ?? 0xaaaaaa,
+        glass: item.glass ?? false,
       });
       scene.add(group);
       registry.set(item.id, { def: item, roomId: room.id, object: group });
