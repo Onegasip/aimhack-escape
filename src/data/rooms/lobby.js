@@ -13,7 +13,7 @@ export default {
     { id: 'lobby_pos', type: 'monitor', pos: [-4.0, -3.35], y: 1.1, size: [0.4, 0.4, 0.3] },
     { id: 'lobby_cctv_1', type: 'monitor', pos: [-5.0, -3.45], y: 1.1, size: [0.5, 0.35, 0.15] },
     { id: 'lobby_cctv_2', type: 'monitor', pos: [-3.3, -3.45], y: 1.1, size: [0.5, 0.35, 0.15] },
-    { id: 'lobby_staff_chair', type: 'chair', pos: [-4.5, -4.65], size: [0.5, 0.9, 0.5] },
+    { id: 'lobby_staff_chair', type: 'chair', pos: [-3.5, -4.8], size: [0.5, 0.9, 0.5] },
     { id: 'lobby_back_shelf', type: 'shelf', pos: [-5, -5.7], size: [2.0, 1.8, 0.4] },
     { id: 'lobby_bracelet_tray', type: 'prop', pos: [-5.65, -2.6], y: 1.1, size: [0.3, 0.1, 0.2] },
     { id: 'lobby_brochure', type: 'prop', pos: [-5.65, -2.0], y: 1.1, size: [0.3, 0.4, 0.15] },
@@ -21,12 +21,12 @@ export default {
     { id: 'lobby_briefing_mark', type: 'mark', pos: [-1.5, -3], size: [1.5, 0.01, 1.5], collide: false },
 
     // B 대기
-    { id: 'lobby_sofa_1', type: 'sofa', pos: [-6.55, 3.5], size: [0.9, 0.85, 2.0] },
-    { id: 'lobby_sofa_2', type: 'sofa', pos: [-3.15, 3.5], size: [0.9, 0.85, 2.0] },
+    { id: 'lobby_sofa_1', type: 'sofa', pos: [-6.55, 3.5], rotY: 90, size: [2.0, 0.85, 0.9] }, // 등받이 서쪽
+    { id: 'lobby_sofa_2', type: 'sofa', pos: [-3.15, 3.5], rotY: -90, size: [2.0, 0.85, 0.9] }, // 등받이 동쪽
     { id: 'lobby_coffee_table', type: 'low_table', pos: [-4.85, 3.5], size: [0.6, 0.45, 1.2] },
     { id: 'lobby_water', type: 'appliance', pos: [-7.2, 1.6], size: [0.35, 1.3, 0.45] },
     { id: 'lobby_umbrella', type: 'prop', pos: [-7.2, -1.2], size: [0.3, 0.6, 0.3] },
-    { id: 'lobby_plant_1', type: 'plant', pos: [-7, 5.5], size: [0.5, 1.4, 0.5] },
+    { id: 'lobby_plant_1', type: 'plant', pos: [-7, 5.6], size: [0.5, 1.4, 0.5] },
     { id: 'lobby_plant_2', type: 'plant', pos: [7, -5.5], size: [0.5, 1.4, 0.5] },
     { id: 'lobby_plant_3', type: 'plant', pos: [-0.5, 5.5], size: [0.5, 1.4, 0.5] },
 
@@ -42,8 +42,8 @@ export default {
     { id: 'lobby_locker', type: 'cabinet', pos: [1.2, 5.675], size: [2.4, 1.8, 0.45] },
     { id: 'lobby_bench', type: 'bench', pos: [1.2, 4.3], size: [1.5, 0.45, 0.4] },
     { id: 'lobby_slipper_shelf', type: 'shelf', pos: [3.0, 5.75], size: [0.8, 0.9, 0.3] },
-    { id: 'lobby_coatrack_1', type: 'prop', pos: [-1.8, 5.4], size: [0.5, 1.8, 0.5] },
-    { id: 'lobby_coatrack_2', type: 'prop', pos: [-0.5, 4.2], size: [0.5, 1.8, 0.5] },
+    { id: 'lobby_coatrack_1', type: 'prop', color: 0x4e342e, pos: [-1.8, 5.4], size: [0.12, 1.8, 0.12] },
+    { id: 'lobby_coatrack_2', type: 'prop', color: 0x4e342e, pos: [-0.65, 4.2], size: [0.12, 1.8, 0.12] },
     { id: 'lobby_fake_door_staff', type: 'door', pos: [4.5, 5.875], size: [0.9, 2.1, 0.05] },
     { id: 'lobby_fake_door_wc', type: 'door', pos: [6.3, 5.875], size: [0.9, 2.1, 0.05] },
 

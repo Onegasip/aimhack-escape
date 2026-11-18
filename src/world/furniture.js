@@ -27,6 +27,28 @@ const TYPE_COLORS = {
   pedestal: 0x9a8f7a, light: 0xfff3c4, extinguisher: 0xd32f2f,
 };
 
+// 의자·소파는 상자 하나 대신 [앉는 부분 + 등받이]로 만든다.
+// 등받이는 기본으로 북쪽(-z)에 붙는다. 다른 쪽이면 방 데이터에 rotY를 준다
+// (rotY 180 = 등받이 남쪽, 90 = 서쪽, -90 = 동쪽).
+const SEATS = {
+  chair: { seat: 0.45, back: 0.06 },
+  stool: null,
+  sofa: { seat: 0.42, back: 0.22 },
+  settee: { seat: 0.42, back: 0.25 },
+};
+
+function buildBlock(group, item, w, h, d) {
+  if (item.hidden) return; // 보이지 않는 막 (충돌만 있음)
+  const color = item.color ?? TYPE_COLORS[item.type] ?? 0xaaaaaa;
+  const seat = SEATS[item.type];
+  if (!seat || h <= seat.seat + 0.05) {
+    addBox(group, { center: [0, h / 2, 0], size: [w, h, d], color, glass: item.glass ?? false });
+    return;
+  }
+  addBox(group, { center: [0, seat.seat / 2, 0], size: [w, seat.seat, d], color });
+  addBox(group, { center: [0, h / 2, -d / 2 + seat.back / 2], size: [w, h, seat.back], color });
+}
+
 // id → { def: 방 데이터, roomId, object: THREE.Group }
 const registry = new Map();
 
@@ -50,12 +72,7 @@ export function buildFurniture(scene, colliders) {
       group.name = item.id;
       group.position.set(x, y, z);
       group.rotation.y = THREE.MathUtils.degToRad(rotY);
-      addBox(group, {
-        center: [0, h / 2, 0],
-        size: [w, h, d],
-        color: item.color ?? TYPE_COLORS[item.type] ?? 0xaaaaaa,
-        glass: item.glass ?? false,
-      });
+      buildBlock(group, item, w, h, d);
       scene.add(group);
       registry.set(item.id, { def: item, roomId: room.id, object: group });
 

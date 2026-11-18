@@ -36,8 +36,9 @@ const bowlerAreas = PAIR_Z.flatMap((z, i) => {
   const n = i + 1;
   return [
     { id: `bowl_ball_return_${n}`, type: 'ball_return', pos: [10.4, z], size: [0.6, 0.8, 0.9] },
-    { id: `bowl_console_${n}`, type: 'terminal', pos: [11.6, z], size: [0.4, 1.1, 0.5] },
-    { id: `bowl_settee_${n}`, type: 'settee', pos: [13.3, z], size: [1.6, 0.85, 2.6] },
+    { id: `bowl_console_${n}`, type: 'terminal', pos: [11.6, z], size: [0.2, 1.1, 0.5] },
+    // 레인을 보고 앉음 → 등받이 동쪽 (rotY -90, 크기는 회전 전 기준)
+    { id: `bowl_settee_${n}`, type: 'settee', pos: [13.3, z], rotY: -90, size: [2.55, 0.85, 1.6] },
     { id: `bowl_settee_table_${n}`, type: 'low_table', pos: [12.0, z + 0.9], size: [0.5, 0.7, 0.8] },
   ];
 });
@@ -48,7 +49,7 @@ const ballRacks = [-13, -10.3, -7.6, -4.9].map((z, i) => (
 ));
 
 // 스탠딩 테이블 4개 + 의자 2개씩
-const highTables = [[4.5, 5.5], [6.5, 5.5], [8.5, 5.5], [6.5, 7.6]].flatMap(([x, z], i) => [
+const highTables = [[4.5, 5.5], [6.5, 5.5], [8.5, 5.5], [6.5, 7.8]].flatMap(([x, z], i) => [
   { id: `bowl_high_table_${i + 1}`, type: 'table', pos: [x, z], size: [0.6, 1.05, 0.6] },
   { id: `bowl_high_stool_${i * 2 + 1}`, type: 'stool', pos: [x, z - 0.55], size: [0.35, 0.75, 0.35] },
   { id: `bowl_high_stool_${i * 2 + 2}`, type: 'stool', pos: [x, z + 0.55], size: [0.35, 0.75, 0.35] },
@@ -70,7 +71,9 @@ export default {
   furniture: [
     ...lanes,
     ...cappings,
-    { id: 'bowl_masking', type: 'panel', color: 0x1e3a8a, pos: [-13.7, -9.755], y: 1.5, size: [0.1, 1.2, 10.3] },
+    { id: 'bowl_masking', type: 'panel', color: 0x1e3a8a, pos: [-13.7, -9.75], y: 1.5, size: [0.1, 1.2, 10.3] },
+    // 파울라인 너머(레인 위)로는 못 걸어가게 하는 보이지 않는 막
+    { id: 'bowl_foul_barrier', type: 'mark', hidden: true, pos: [FOUL, -9.725], size: [0.1, 1.0, 10.35] },
     ...bowlerAreas,
     ...ballRacks,
 
@@ -86,15 +89,16 @@ export default {
     // F 사물함·벤치·트로피
     { id: 'bowl_locker', type: 'cabinet', pos: [-7.8, 5.5], size: [2.4, 1.8, 0.45] },
     { id: 'bowl_bench_1', type: 'bench', pos: [-8, 3], size: [1.8, 0.45, 0.4] },
-    { id: 'bowl_bench_2', type: 'bench', pos: [-5.5, 3], size: [1.8, 0.45, 0.4] },
-    { id: 'bowl_trophy', type: 'cabinet', color: 0xb8860b, pos: [-3, 3], size: [1.5, 1.9, 0.45] },
+    { id: 'bowl_bench_2', type: 'bench', pos: [-5.35, 3], size: [1.8, 0.45, 0.4] },
+    { id: 'bowl_trophy', type: 'cabinet', glass: true, pos: [-2.85, 3], size: [1.5, 1.9, 0.45] },
+    { id: 'bowl_trophy_items', type: 'prop', color: 0xd4af37, pos: [-2.85, 3], y: 0.9, size: [1.2, 0.35, 0.25], collide: false },
 
     // B 매점 (남동)
     ...highTables,
     { id: 'bowl_snack_counter', type: 'counter', pos: [13, 12.1], size: [3.0, 1.1, 0.7] },
     { id: 'bowl_coffee', type: 'appliance', pos: [12, 12.1], y: 1.1, size: [0.4, 0.5, 0.4] },
     { id: 'bowl_snack_menu', type: 'board', pos: [13, 14.89], y: 1.8, size: [2.0, 0.8, 0.02] },
-    { id: 'bowl_snack_fridge_1', type: 'fridge', pos: [15.025, 14.575], size: [0.65, 1.9, 0.65] },
+    { id: 'bowl_snack_fridge_1', type: 'fridge', pos: [14.875, 14.575], size: [0.65, 1.9, 0.65] },
     { id: 'bowl_snack_fridge_2', type: 'fridge', pos: [16.375, 14.575], size: [0.65, 1.9, 0.65] },
 
     // E 프로샵 (남서)
@@ -104,9 +108,9 @@ export default {
     { id: 'bowl_drill', type: 'machine', pos: [-11, 13.5], size: [0.8, 1.7, 0.8] },
 
     // G 아케이드
-    { id: 'bowl_arcade_1', type: 'machine', color: 0xe91e63, pos: [-4.5, 14.4], size: [0.8, 1.9, 0.9] },
+    { id: 'bowl_arcade_1', type: 'machine', color: 0xe91e63, pos: [-4.65, 14.4], size: [0.8, 1.9, 0.9] },
     { id: 'bowl_arcade_2', type: 'machine', color: 0x3f51b5, pos: [-3, 14.4], size: [0.8, 1.9, 0.9] },
-    { id: 'bowl_arcade_3', type: 'machine', color: 0x009688, pos: [-1.5, 14.4], size: [0.8, 1.9, 0.9] },
+    { id: 'bowl_arcade_3', type: 'machine', color: 0x009688, pos: [-1.35, 14.4], size: [0.8, 1.9, 0.9] },
     { id: 'bowl_arcade_hoop', type: 'machine', color: 0xff9800, pos: [0.6, 13.6], size: [1.2, 2.6, 2.6] },
 
     // 기타

@@ -5,7 +5,9 @@
 function tableSet(id, type, pos, size, chairs) {
   const items = [{ id, type, pos, size }];
   chairs.forEach(([dx, dz], i) => {
-    items.push({ id: `${id}_chair_${i + 1}`, type: 'chair', pos: [pos[0] + dx, pos[1] + dz], size: [0.45, 0.9, 0.45] });
+    // 등받이가 테이블 반대쪽을 보게 회전 (북쪽 의자 0, 남쪽 180, 서쪽 90, 동쪽 -90)
+    const rotY = dz < 0 ? 0 : dz > 0 ? 180 : dx < 0 ? 90 : -90;
+    items.push({ id: `${id}_chair_${i + 1}`, type: 'chair', pos: [pos[0] + dx, pos[1] + dz], rotY, size: [0.45, 0.9, 0.45] });
   });
   // 테이블 위 매트와 좌석 번호
   items.push({ id: `${id}_mat`, type: 'prop', color: 0x2e5e3a, pos, y: size[1], size: [size[0] - 0.1, 0.005, size[2] - 0.1], collide: false });
@@ -30,7 +32,7 @@ export default {
     { id: 'cafe_coffee_machine', type: 'appliance', pos: [-7.1, -3.9], y: 0.9, size: [0.4, 0.45, 0.4] },
     { id: 'cafe_price_board', type: 'board', pos: [-7.39, -5.5], y: 1.3, size: [0.02, 0.6, 0.9] },
     { id: 'cafe_menu_board', type: 'board', pos: [-5, -3.5], y: 2.0, size: [1.5, 0.6, 0.02] },
-    { id: 'cafe_hot_games', type: 'shelf', pos: [-5, -4.725], size: [1.0, 1.2, 0.35] },
+    { id: 'cafe_hot_games', type: 'shelf', pos: [-5, -4.875], size: [1.0, 1.2, 0.35] },
     { id: 'cafe_extinguisher', type: 'extinguisher', pos: [-6.4, -2.4], size: [0.15, 0.5, 0.15] },
 
     // B 게임 진열 벽 (북벽 12m 연속)
